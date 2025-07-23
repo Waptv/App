@@ -1,0 +1,125 @@
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+    
+    <style>
+        body {width:100%;
+            font-family: 'Helvetica Neue', Arial, sans-serif';
+            margin: 0;
+            padding: 2px;
+            background-color: #000;
+            color: #fff;
+        }
+        .file-container {width:100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            justify-content: center;
+            padding: 2px;
+        }
+        .match-item {width:100%;display: block;
+            margin: 1px;
+            text-align: center;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform .3s ease, box-shadow .3s ease;
+            background-color: #1a1a1a;
+            padding: 10px;
+            
+        }
+        .match-item img {
+           width: 100%;
+            height: 110px;
+            display: block ;
+            margin: 0 auto 1px auto;
+        }
+        .match-item a {
+            text-decoration: none;
+            color: #00bfff;
+            font-weight: 700;
+            display: block;
+            margin-top: 1px;
+            transition: color .3s ease;
+        }
+        .match-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255, 255, 255, .3);
+        }
+        .match-item a:hover {
+            color: #fff;
+        }
+        h3 {
+            text-align: center;
+            color: #00bfff;
+            margin-bottom: 4px;
+        }
+    
+        .status-LIVE {
+            color: red;
+            animation: glow 1s infinite alternate;
+        }
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px red;
+            }
+            to {
+                text-shadow: 0 0 20px red;
+            }
+        }
+        .status-UPCOMING {
+            color: #777;
+            opacity: 0.6;
+        }
+        
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="file-container" id="matches"></div>
+
+    <script>
+        const apiURL = 'https://raw.githubusercontent.com/drmlive/sliv-live-events/main/sonyliv.json';
+
+        fetch(apiURL)
+            .then(response => response.json())
+            .then(data => {
+                data.matches.sort((a, b) => {
+                    return a.isLive === true && b.isLive !== true ? -1 : a.isLive !== true && b.isLive === true ? 1 : 0;
+                });
+
+                const matchesContainer = document.getElementById('matches');
+                data.matches.forEach(match => {
+                    const matchItem = document.createElement('div');
+                    matchItem.className = 'match-item';
+                    
+                    const statusText = match.isLive ? 'LIVE' : 'UPCOMING';
+                    const statusClass = match.isLive ? 'status-LIVE' : 'status-UPCOMING';
+                    const startTimeText = !match.isLive && match.match_name ? `<p>${match.match_name}</p>` : '';
+
+                    matchItem.innerHTML = `
+                        <img src="${match.src}" alt="${match.event_name}">
+                        <h3>${match.event_name}</h3>
+                        <p>${match.match_name || ''}</p>
+                        <p class="${statusClass}">${statusText}</p>
+                        ${startTimeText}
+                    `;
+                    if (match.isLive && match.dai_url) {
+                        matchItem.addEventListener('click', () => {
+                            window.location.href = `/psonyliv?${match.pub_url}`;
+                        });
+                    } else {
+                        matchItem.addEventListener('click', () => {
+                            alert('This match is UPCOMING.');
+                        });
+                    }
+
+                    matchesContainer.appendChild(matchItem);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+    </script>
+</body>
+
+</html>
